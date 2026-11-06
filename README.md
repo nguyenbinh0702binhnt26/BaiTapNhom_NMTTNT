@@ -5,7 +5,7 @@ Bài tập nhóm — Đề tài: **Ứng dụng tìm đường đi trong mê cun
 Ứng dụng web trực quan hóa từng bước hai thuật toán tìm kiếm mù trong không gian trạng thái:
 tìm kiếm theo chiều rộng (BFS) và tìm kiếm theo chiều sâu (DFS), có chế độ chạy song song để so sánh.
 
-**Demo trực tuyến:** `https://<tên-tài-khoản>.github.io/maze-bfs-dfs/` (điền sau khi bật GitHub Pages)
+**Demo trực tuyến:** [Mở ứng dụng](https://nguyenbinh0702binhnt26.github.io/BaiTapNhom_NMTTNT/)
 
 ![So sánh BFS và DFS trên cùng một mê cung](docs/screenshot-compare.png)
 
