@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<!--
+  Nguyễn Hữu Tài - K24DTCN492
+  Đề tài: Ứng dụng tìm đường đi trong mê cung bằng thuật toán BFS và DFS
+-->
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tìm đường trong mê cung bằng BFS và DFS</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>Tìm đường đi trong mê cung bằng BFS và DFS</h1>
+    <p>Trực quan hóa từng bước hai thuật toán tìm kiếm mù trong không gian trạng thái</p>
+  </header>
+
+  <main class="layout">
+    <aside class="sidebar">
+      <section class="card">
+        <h2>Mê cung</h2>
+        <label class="field">Kiểu mê cung
+          <select id="maze-type"></select>
+        </label>
+        <label class="field">Kích thước
+          <select id="maze-size"></select>
+        </label>
+        <label class="field">Seed (cùng seed → cùng mê cung)
+          <span class="row">
+            <input id="maze-seed" type="number" min="1" max="999999" value="2026">
+            <button id="btn-random" type="button" class="btn ghost" title="Seed ngẫu nhiên">Ngẫu nhiên</button>
+          </span>
+        </label>
+        <button id="btn-generate" type="button" class="btn">Tạo mê cung</button>
+      </section>
+
+      <section class="card">
+        <h2>Thuật toán</h2>
+        <div class="segmented" role="radiogroup">
+          <label><input type="radio" name="algo" value="bfs" checked><span>BFS</span></label>
+          <label><input type="radio" name="algo" value="dfs"><span>DFS</span></label>
+          <label><input type="radio" name="algo" value="compare"><span>So sánh</span></label>
+        </div>
+
+        <div class="controls">
+          <button id="btn-play" type="button" class="btn primary">Chạy</button>
+          <button id="btn-step" type="button" class="btn ghost" title="Phím →">Từng bước</button>
+          <button id="btn-finish" type="button" class="btn ghost" title="Phím Enter">Kết quả ngay</button>
+          <button id="btn-clear" type="button" class="btn ghost" title="Phím R">Xóa kết quả</button>
+        </div>
+
+        <label class="field">Tốc độ: <b id="speed-label"></b>
+          <input id="speed" type="range" min="1" max="10" value="6">
+        </label>
+      </section>
+
+      <section class="card">
+        <h2>Chỉnh sửa</h2>
+        <ul class="hint">
+          <li>Nhấn hoặc kéo chuột trên ô trống để <b>vẽ tường</b>, trên tường để <b>xóa</b>.</li>
+          <li>Kéo ô <b>S</b> hoặc <b>G</b> để đổi điểm xuất phát / đích.</li>
+          <li>Phím tắt: <kbd>Space</kbd> chạy/dừng, <kbd>→</kbd> từng bước, <kbd>Enter</kbd> kết quả ngay.</li>
+        </ul>
+      </section>
+
+      <section class="card">
+        <h2>Chú thích</h2>
+        <ul class="legend">
+          <li><i style="background: var(--c-start)"></i>S – Xuất phát</li>
+          <li><i style="background: var(--c-goal)"></i>G – Đích</li>
+          <li><i style="background: var(--c-wall)"></i>Tường</li>
+          <li><i style="background: var(--c-frontier)"></i>OPEN – chờ xét</li>
+          <li><i style="background: var(--c-visited)"></i>CLOSED – đã xét</li>
+          <li><i style="background: var(--c-current)"></i>Ô đang xét</li>
+          <li><i style="background: var(--c-path)"></i>Đường đi tìm được</li>
+        </ul>
+      </section>
+    </aside>
+
+    <section class="content">
+      <p id="summary" class="summary" hidden></p>
+
+      <div id="boards" class="boards">
+        <article class="card board" id="board-a">
+          <header class="board-head">
+            <h2 class="board-title">BFS</h2>
+            <span class="status"></span>
+          </header>
+          <div class="canvas-wrap"><canvas></canvas></div>
+          <dl class="stats">
+            <div><dt title="Số ô đã xét = |CLOSED|">Đã xét</dt><dd data-stat="expanded">–</dd></div>
+            <div><dt title="Số ô đang chờ xét trong OPEN">|OPEN|</dt><dd data-stat="open">–</dd></div>
+            <div><dt title="Kích thước lớn nhất của OPEN (bộ nhớ)">|OPEN| max</dt><dd data-stat="maxOpen">–</dd></div>
+            <div><dt title="Số bước đi từ S đến G">Đường đi</dt><dd data-stat="path">–</dd></div>
+            <div><dt title="Thời gian chạy thuật toán, không tính hoạt ảnh">Thời gian</dt><dd data-stat="time">–</dd></div>
+          </dl>
+          <div class="peek"><span class="peek-label"></span><span class="peek-items"></span></div>
+          <details class="log">
+            <summary>Nhật ký từng bước</summary>
+            <pre></pre>
+          </details>
+        </article>
+
+        <article class="card board" id="board-b" hidden>
+          <header class="board-head">
+            <h2 class="board-title">DFS</h2>
+            <span class="status"></span>
+          </header>
+          <div class="canvas-wrap"><canvas></canvas></div>
+          <dl class="stats">
+            <div><dt title="Số ô đã xét = |CLOSED|">Đã xét</dt><dd data-stat="expanded">–</dd></div>
+            <div><dt title="Số ô đang chờ xét trong OPEN">|OPEN|</dt><dd data-stat="open">–</dd></div>
+            <div><dt title="Kích thước lớn nhất của OPEN (bộ nhớ)">|OPEN| max</dt><dd data-stat="maxOpen">–</dd></div>
+            <div><dt title="Số bước đi từ S đến G">Đường đi</dt><dd data-stat="path">–</dd></div>
+            <div><dt title="Thời gian chạy thuật toán, không tính hoạt ảnh">Thời gian</dt><dd data-stat="time">–</dd></div>
+          </dl>
+          <div class="peek"><span class="peek-label"></span><span class="peek-items"></span></div>
+          <details class="log">
+            <summary>Nhật ký từng bước</summary>
+            <pre></pre>
+          </details>
+        </article>
+      </div>
+
+      <section class="card">
+        <h2>Mã giả – BFS và DFS chỉ khác nhau ở cách lấy/thêm phần tử của OPEN</h2>
+        <div class="pseudo">
+          <pre><b>BFS</b> (OPEN là hàng đợi – FIFO)
+OPEN ← [S];  CLOSED ← ∅
+lặp
+  nếu OPEN rỗng: thông báo thất bại, dừng
+  <span class="diff">u ← lấy phần tử ở ĐẦU OPEN</span>
+  đưa u vào CLOSED
+  nếu u = G: lần ngược cha(·) từ G về S, dừng
+  với mỗi v kề u (Lên, Phải, Xuống, Trái):
+    nếu v ∉ OPEN và v ∉ CLOSED:
+      cha(v) ← u
+      <span class="diff">thêm v vào CUỐI OPEN</span></pre>
+          <pre><b>DFS</b> (OPEN là ngăn xếp – LIFO)
+OPEN ← [S];  CLOSED ← ∅
+lặp
+  nếu OPEN rỗng: thông báo thất bại, dừng
+  <span class="diff">u ← lấy phần tử ở ĐỈNH OPEN</span>
+  đưa u vào CLOSED
+  nếu u = G: lần ngược cha(·) từ G về S, dừng
+  với mỗi v kề u (Lên, Phải, Xuống, Trái):
+    nếu v ∉ OPEN và v ∉ CLOSED:
+      cha(v) ← u
+      <span class="diff">đẩy v lên ĐỈNH OPEN</span> (đẩy ngược thứ tự
+      để hướng Lên được xét trước)</pre>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <footer class="footer">
+    Bài tập nhóm · Thực hiện: Nguyễn Hữu Tài – K24DTCN492
+    <!-- Thêm tên các thành viên khác của nhóm tại đây -->
+  </footer>
+
+  <script src="js/maze.js"></script>
+  <script src="js/algorithms.js"></script>
+  <script src="js/renderer.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
